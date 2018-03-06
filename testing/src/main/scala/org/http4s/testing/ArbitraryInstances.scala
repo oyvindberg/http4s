@@ -10,7 +10,6 @@ import cats.implicits.{catsSyntaxEither => _, _}
 import fs2.{Pure, Stream}
 import java.nio.charset.{Charset => NioCharset}
 import java.time._
-import java.util.Locale
 import org.http4s.headers._
 import org.http4s.syntax.literals._
 import org.http4s.syntax.string._
@@ -19,7 +18,6 @@ import org.scalacheck._
 import org.scalacheck.Arbitrary._
 import org.scalacheck.Gen._
 import org.scalacheck.rng.Seed
-import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.concurrent.Future
 import scala.util.Try
@@ -33,7 +31,7 @@ trait ArbitraryInstances {
     Arbitrary(arbitrary[String].map(_.ci))
 
   implicit val cogenCaseInsensitiveString: Cogen[CaseInsensitiveString] =
-    Cogen[String].contramap(_.value.toLowerCase(Locale.ROOT))
+    Cogen[String].contramap(_.value.toLowerCase)
 
   implicit def arbitraryNonEmptyList[A: Arbitrary]: Arbitrary[NonEmptyList[A]] =
     Arbitrary {
@@ -168,7 +166,7 @@ trait ArbitraryInstances {
     Cogen[(Int, Int)].contramap(v => (v.major, v.minor))
 
   implicit val arbitraryNioCharset: Arbitrary[NioCharset] =
-    Arbitrary(oneOf(NioCharset.availableCharsets.values.asScala.toSeq))
+    Arbitrary(oneOf(CharSets.availableCharsets))
 
   implicit val cogenNioCharset: Cogen[NioCharset] =
     Cogen[String].contramap(_.name)
@@ -647,7 +645,7 @@ trait ArbitraryInstances {
   }
 
   implicit val cogenScheme: Cogen[Uri.Scheme] =
-    Cogen[String].contramap(_.value.toLowerCase(Locale.ROOT))
+    Cogen[String].contramap(_.value.toLowerCase)
 
   implicit val arbitraryTransferCoding: Arbitrary[TransferCoding] = Arbitrary {
     Gen.oneOf(
@@ -659,7 +657,7 @@ trait ArbitraryInstances {
   }
 
   implicit val cogenTransferCoding: Cogen[TransferCoding] =
-    Cogen[String].contramap(_.coding.toLowerCase(Locale.ROOT))
+    Cogen[String].contramap(_.coding.toLowerCase)
 
   /** https://tools.ietf.org/html/rfc3986 */
   implicit val arbitraryUri: Arbitrary[Uri] = Arbitrary {

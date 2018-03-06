@@ -1,5 +1,7 @@
 import org.http4s.build.Http4sPlugin._
 import scala.xml.transform.{RewriteRule, RuleTransformer}
+import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
+import sbtcrossproject.CrossProject
 
 // Global settings
 organization in ThisBuild := "org.http4s"
@@ -16,7 +18,7 @@ onLoad in Global := { s =>
   "dependencyUpdates" :: s
 }
 
-lazy val core = libraryProject("core")
+lazy val core = libraryCrossProject("core")
   .enablePlugins(BuildInfoPlugin)
   .settings(
     description := "Core http4s library for servers and clients",
@@ -27,41 +29,64 @@ lazy val core = libraryProject("core")
     ),
     buildInfoPackage := organization.value,
     libraryDependencies ++= Seq(
-      cats,
-      catsEffect,
-      fs2Io,
-      http4sWebsocket,
-      log4s,
-      parboiled,
+      cats.value,
+      fs2Core.value,
+      catsEffect.value,
+      http4sWebsocket.value,
+      log4s.value,
+      parboiled.value,
       scalaReflect(scalaOrganization.value, scalaVersion.value) % "provided",
       scalaCompiler(scalaOrganization.value, scalaVersion.value) % "provided"
     ),
   )
+  .jvmSettings(
+    libraryDependencies ++= Seq(fs2Io)
+  )
+  .jsSettings(
+    libraryDependencies ++= Seq(scalaJavaTime.value)
+  )
 
-lazy val testing = libraryProject("testing")
+lazy val coreJVM = core.jvm
+lazy val coreJS  = core.js
+
+lazy val testing = libraryCrossProject("testing")
   .settings(
     description := "Instances and laws for testing http4s code",
     libraryDependencies ++= Seq(
-      catsEffectLaws,
-      scalacheck,
-      specs2Core
+      catsEffectLaws.value,
+      scalacheck.value,
+      specs2Core.value
     ),
   )
   .dependsOn(core)
 
+lazy val testingJVM = testing.jvm
+lazy val testingJS  = testing.js
+
 // Defined outside core/src/test so it can depend on published testing
-lazy val tests = libraryProject("tests")
+lazy val tests = libraryCrossProject("tests")
   .settings(
     description := "Tests for core project",
     mimaPreviousArtifacts := Set.empty
   )
+  .jsSettings(
+    libraryDependencies ++= Seq(
+      "org.scala-js" %% "scalajs-test-interface" % scalaJSVersion,
+      scalaParserCombinators.value % Test
+    ),
+    scalaJSStage in Test := FastOptStage,
+    testFrameworks := Seq(TestFramework("org.specs2.runner.Specs2Framework"))
+  )
   .dependsOn(core, testing % "test->test")
+
+lazy val testsJVM = tests.jvm
+lazy val testsJS  = tests.js
 
 lazy val server = libraryProject("server")
   .settings(
     description := "Base library for building http4s servers"
   )
-  .dependsOn(core, testing % "test->test", theDsl % "test->compile")
+  .dependsOn(coreJVM, testingJVM % "test->test", theDslJVM % "test->compile")
 
 lazy val serverMetrics = libraryProject("server-metrics")
   .settings(
@@ -81,26 +106,29 @@ lazy val prometheusServerMetrics = libraryProject("prometheus-server-metrics")
       prometheusHotspot
     ),
   )
-  .dependsOn(server % "compile;test->test", theDsl)
+  .dependsOn(server % "compile;test->test", theDslJVM)
 
-lazy val client = libraryProject("client")
+lazy val client = libraryCrossProject("client")
   .settings(
-    description := "Base library for building http4s clients",
-    libraryDependencies += jettyServlet % "test"
-  )
-  .dependsOn(
+    description := "Base library for building http4s clients"
+  ).dependsOn(
     core,
     testing % "test->test",
-    server % "test->compile",
-    theDsl % "test->compile",
-    scalaXml % "test->compile")
+    theDsl % "test->compile"
+  )
+
+lazy val clientJVM = client.jvm
+  .settings(libraryDependencies += jettyServlet % "test")
+  .dependsOn(server, server % "test->compile", scalaXml % "test->compile")
+
+lazy val clientJS = client.js
 
 lazy val blazeCore = libraryProject("blaze-core")
   .settings(
     description := "Base library for binding blaze to http4s clients and servers",
     libraryDependencies += blaze,
   )
-  .dependsOn(core, testing % "test->test")
+  .dependsOn(coreJVM, testingJVM % "test->test")
 
 lazy val blazeServer = libraryProject("blaze-server")
   .settings(
@@ -112,7 +140,10 @@ lazy val blazeClient = libraryProject("blaze-client")
   .settings(
     description := "blaze implementation for http4s clients"
   )
-  .dependsOn(blazeCore % "compile;test->test", client % "compile;test->test")
+  .dependsOn(
+    blazeCore % "compile;test->test",
+    clientJVM % "compile;test->test"
+  )
 
 lazy val asyncHttpClient = libraryProject("async-http-client")
   .settings(
@@ -122,7 +153,23 @@ lazy val asyncHttpClient = libraryProject("async-http-client")
       fs2ReactiveStreams
     )
   )
-  .dependsOn(core, testing % "test->test", client % "compile;test->test")
+  .dependsOn(
+    coreJVM,
+    testingJVM % "test->test",
+    clientJVM % "compile;test->test",
+    clientJVM % "compile;test->test"
+  )
+
+lazy val fetchHttpClient =
+  http4sJsProject("fetch-client").settings(
+    libraryDependencies ++= Seq(
+      "org.scala-js" %%% "scalajs-dom" % "0.9.4"
+    )
+  ).dependsOn(
+    coreJS,
+    testingJS % "test->test",
+    clientJS % "compile;test->test"
+  )
 
 lazy val okHttpClient = libraryProject("okhttp-client")
   .settings(
@@ -132,7 +179,7 @@ lazy val okHttpClient = libraryProject("okhttp-client")
     ),
     mimaPreviousArtifacts := Set.empty // remove me once merged
   )
-  .dependsOn(core, testing % "test->test", client % "compile;test->test")
+  .dependsOn(coreJVM, testingJVM % "test->test", clientJVM % "compile;test->test")
 
 
 lazy val servlet = libraryProject("servlet")
@@ -154,7 +201,7 @@ lazy val jetty = libraryProject("jetty")
       jettyServlet
     )
   )
-  .dependsOn(servlet % "compile;test->test", theDsl % "test->test")
+  .dependsOn(servlet % "compile;test->test", theDslJVM % "test->test")
 
 lazy val tomcat = libraryProject("tomcat")
   .settings(
@@ -167,46 +214,60 @@ lazy val tomcat = libraryProject("tomcat")
   .dependsOn(servlet % "compile;test->test")
 
 // `dsl` name conflicts with modern SBT
-lazy val theDsl = libraryProject("dsl")
+lazy val theDsl = libraryCrossProject("dsl")
   .settings(
     description := "Simple DSL for writing http4s services"
   )
   .dependsOn(core, testing % "test->test")
 
-lazy val jawn = libraryProject("jawn")
+lazy val theDslJVM = theDsl.jvm
+lazy val theDslJS = theDsl.js
+
+lazy val jawn = libraryCrossProject("jawn")
   .settings(
     description := "Base library to parse JSON to various ASTs for http4s",
     libraryDependencies += jawnFs2
   )
   .dependsOn(core, testing % "test->test")
 
+lazy val jawnJVM = jawn.jvm
+lazy val jawnJS  = jawn.js
+
 lazy val argonaut = libraryProject("argonaut")
   .settings(
     description := "Provides Argonaut codecs for http4s",
     libraryDependencies ++= Seq(
-      Http4sPlugin.argonaut
+      Http4sPlugin.argonaut.value
     )
   )
-  .dependsOn(core, testing % "test->test", jawn % "compile;test->test")
+  .dependsOn(coreJVM, testingJVM % "test->test", jawnJVM % "compile;test->test")
 
-lazy val boopickle = libraryProject("boopickle")
+lazy val boopickle = libraryCrossProject("boopickle")
   .settings(
     description := "Provides Boopickle codecs for http4s",
     libraryDependencies ++= Seq(
-      Http4sPlugin.boopickle
+      Http4sPlugin.boopickle.value
     ),
   )
   .dependsOn(core, testing % "test->test")
 
-lazy val circe = libraryProject("circe")
+val boopickleJVM = boopickle.jvm
+val boopickleJS = boopickle.js
+
+lazy val circe = libraryCrossProject("circe")
   .settings(
     description := "Provides Circe codecs for http4s",
-    libraryDependencies ++= Seq(
-      circeJawn,
-      circeTesting % "test"
-    )
+    libraryDependencies ++= Seq(circeTesting.value % "test")
   )
+  .jvmSettings(libraryDependencies ++= Seq(circeJawn))
+  .jsSettings(libraryDependencies ++= Seq(
+    "io.circe" %%% "circe-scalajs" % circeJawn.revision,
+    "org.scala-js" %%% "scalajs-dom" % "0.9.4"
+  ))
   .dependsOn(core, testing % "test->test", jawn % "compile;test->test")
+
+lazy val circeJVM = circe.jvm
+lazy val circeJS  = circe.js
 
 lazy val json4s = libraryProject("json4s")
   .settings(
@@ -216,7 +277,7 @@ lazy val json4s = libraryProject("json4s")
       json4sCore
     ),
   )
-  .dependsOn(jawn % "compile;test->test")
+  .dependsOn(jawnJVM % "compile;test->test")
 
 lazy val json4sNative = libraryProject("json4s-native")
   .settings(
@@ -240,7 +301,7 @@ lazy val scalaXml = libraryProject("scala-xml")
       case _ => Seq.empty
     }).value,
   )
-  .dependsOn(core, testing % "test->test")
+  .dependsOn(coreJVM, testingJVM % "test->test")
 
 lazy val twirl = http4sProject("twirl")
   .settings(
@@ -249,7 +310,7 @@ lazy val twirl = http4sProject("twirl")
     TwirlKeys.templateImports := Nil
   )
   .enablePlugins(SbtTwirl)
-  .dependsOn(core, testing % "test->test")
+  .dependsOn(coreJVM, testingJVM % "test->test")
 
 lazy val mimedbGenerator = http4sProject("mimedb-generator")
   .enablePlugins(PrivateProjectPlugin)
@@ -257,19 +318,19 @@ lazy val mimedbGenerator = http4sProject("mimedb-generator")
     description := "MimeDB source code generator",
     libraryDependencies ++= Seq(
       Http4sPlugin.treeHugger,
-      Http4sPlugin.circeGeneric
+      Http4sPlugin.circeGeneric.value
     )
   )
-  .dependsOn(blazeClient, circe)
+  .dependsOn(blazeClient, circeJVM)
 
 lazy val bench = http4sProject("bench")
   .enablePlugins(JmhPlugin)
   .enablePlugins(PrivateProjectPlugin)
   .settings(
     description := "Benchmarks for http4s",
-    libraryDependencies += circeParser
+    libraryDependencies += circeParser.value
   )
-  .dependsOn(core, circe)
+  .dependsOn(coreJVM, circeJVM)
 
 lazy val loadTest = http4sProject("load-test")
   .enablePlugins(PrivateProjectPlugin)
@@ -292,14 +353,20 @@ lazy val docs = http4sProject("docs")
   )
   .settings(
     libraryDependencies ++= Seq(
-      circeGeneric,
-      circeLiteral,
+      circeGeneric.value,
+      circeLiteral.value,
       cryptobits
     ),
     description := "Documentation for http4s",
     autoAPIMappings := true,
     unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject --
       inProjects( // TODO would be nice if these could be introspected from noPublishSettings
+        coreJS,
+        testsJS,
+        testingJS,
+        clientJS,
+        jawnJS,
+        circeJS,
         bench,
         examples,
         examplesBlaze,
@@ -335,7 +402,7 @@ lazy val docs = http4sProject("docs")
             "-implicits",
             "-doc-source-url",
             path,
-            "-sourcepath",
+                        "-sourcepath",
             (baseDirectory in ThisBuild).value.getAbsolutePath
           )
         case _ => Seq.empty
@@ -366,7 +433,7 @@ lazy val docs = http4sProject("docs")
       }
     }
   )
-  .dependsOn(client, core, theDsl, blazeServer, blazeClient, circe)
+  .dependsOn(clientJVM, coreJVM, theDslJVM, blazeServer, blazeClient, circeJVM)
 
 lazy val website = http4sProject("website")
   .enablePlugins(HugoPlugin, GhpagesPlugin, PrivateProjectPlugin)
@@ -393,13 +460,13 @@ lazy val examples = http4sProject("examples")
   .settings(
     description := "Common code for http4s examples",
     libraryDependencies ++= Seq(
-      circeGeneric,
+      circeGeneric.value,
       logbackClassic % "runtime",
       jspApi % "runtime" // http://forums.yourkit.com/viewtopic.php?f=2&t=3733
     ),
     TwirlKeys.templateImports := Nil
   )
-  .dependsOn(server, serverMetrics, theDsl, circe, scalaXml, twirl)
+  .dependsOn(server, serverMetrics, theDslJVM, circeJVM, scalaXml, twirl)
   .enablePlugins(SbtTwirl)
 
 lazy val examplesBlaze = exampleProject("examples-blaze")
@@ -425,7 +492,7 @@ lazy val examplesDocker = http4sProject("examples-docker")
       logbackClassic % "runtime"
     )
   )
-  .dependsOn(blazeServer, theDsl)
+  .dependsOn(blazeServer, theDslJVM)
 
 lazy val examplesJetty = exampleProject("examples-jetty")
   .settings(Revolver.settings)
@@ -459,16 +526,26 @@ lazy val examplesWar = exampleProject("examples-war")
   )
   .dependsOn(servlet)
 
-def http4sProject(name: String) =
+def http4sProject(name: String): Project =
   Project(name, file(name))
-    .settings(commonSettings)
-    .settings(
-      moduleName := s"http4s-$name",
-      testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "showtimes", "failtrace"),
-      initCommands()
-    )
+    .settings(commonSettings(name))
 
-def libraryProject(name: String) = http4sProject(name)
+def http4sJsProject(name: String) =
+  http4sProject(name)
+    .enablePlugins(ScalaJSPlugin)
+    .settings(scalajsSettings)
+
+def http4sCrossProject(name: String) =
+  CrossProject(name, file(name))(JSPlatform, JVMPlatform)
+    .crossType(CrossType.Pure)
+    .settings(commonSettings(name))
+    .jsSettings(scalajsSettings)
+
+def libraryProject(name: String) =
+  http4sProject(name)
+
+def libraryCrossProject(name: String) =
+  http4sCrossProject(name)
 
 def exampleProject(name: String) =
   http4sProject(name)
@@ -476,7 +553,16 @@ def exampleProject(name: String) =
     .enablePlugins(PrivateProjectPlugin)
     .dependsOn(examples)
 
-lazy val commonSettings = Seq(
+lazy val scalajsSettings = Seq(
+  sources in (Compile,doc) := Seq.empty, // Ignore, tut is not supported in scala.js
+  coverageEnabled := false, // scoverage not supported on scala.js
+  emitSourceMaps := false
+)
+
+def commonSettings(name: String) = Seq(
+  moduleName := s"http4s-$name",
+  testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "showtimes", "failtrace"),
+  initCommands(),
   http4sJvmTarget := scalaVersion.map {
     VersionNumber(_).numbers match {
       case Seq(2, 10, _*) => "1.7"
@@ -496,14 +582,14 @@ lazy val commonSettings = Seq(
     "-Xlint:unchecked"
   ),
   libraryDependencies ++= Seq(
-    catsLaws,
-    catsKernelLaws,
-    discipline,
+    catsLaws.value,
+    catsKernelLaws.value,
+    discipline.value,
     logbackClassic,
-    scalacheck, // 0.13.3 fixes None.get
-    specs2Core,
-    specs2MatcherExtra,
-    specs2Scalacheck
+    scalacheck.value, // 0.13.3 fixes None.get
+    specs2Core.value,
+    specs2MatcherExtra.value,
+    specs2Scalacheck.value
   ).map(_ % "test"),
   // don't include scoverage as a dependency in the pom
   // https://github.com/scoverage/sbt-scoverage/issues/153

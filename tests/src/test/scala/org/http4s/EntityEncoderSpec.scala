@@ -7,7 +7,6 @@ import cats.laws.discipline.ContravariantTests
 import cats.laws.discipline.eq._
 import fs2._
 import java.io._
-import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeoutException
 import org.http4s.headers._
 import org.scalacheck.Arbitrary
@@ -50,24 +49,6 @@ class EntityEncoderSpec extends Http4sSpec {
     "render entity bodies with chunked transfer encoding" in {
       EntityEncoder[IO, EntityBody[IO]].headers.get(`Transfer-Encoding`) must beSome(
         `Transfer-Encoding`(TransferCoding.chunked))
-    }
-
-    "render files" in {
-      val tmpFile = File.createTempFile("http4s-test-", ".txt")
-      try {
-        val w = new FileWriter(tmpFile)
-        try w.write("render files test")
-        finally w.close()
-        writeToString(tmpFile) must_== "render files test"
-      } finally {
-        tmpFile.delete()
-        ()
-      }
-    }
-
-    "render input streams" in {
-      val inputStream = new ByteArrayInputStream("input stream".getBytes(StandardCharsets.UTF_8))
-      writeToString(IO(inputStream)) must_== "input stream"
     }
 
     "render readers" in {

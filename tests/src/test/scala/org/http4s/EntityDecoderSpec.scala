@@ -11,7 +11,6 @@ import cats.laws.discipline.arbitrary._
 import cats.laws.discipline.eq._
 import fs2._
 import fs2.Stream._
-import java.io.{File, FileInputStream, InputStreamReader}
 import java.nio.charset.StandardCharsets
 import org.http4s.Status.Ok
 import org.http4s.testing._
@@ -344,64 +343,6 @@ class EntityDecoderSpec extends Http4sSpec with PendingUntilFixed {
     "handle a parse failure" in {
       server(Request(body = strBody("%C"))).map(_.status) must be(Status.BadRequest)
     }.pendingUntilFixed
-  }
-
-  "A File EntityDecoder" should {
-    val binData: Array[Byte] = "Bytes 10111".getBytes
-
-    def readFile(in: File): Array[Byte] = {
-      val os = new FileInputStream(in)
-      val data = new Array[Byte](in.length.asInstanceOf[Int])
-      os.read(data)
-      data
-    }
-
-    def readTextFile(in: File): String = {
-      val os = new InputStreamReader(new FileInputStream(in))
-      val data = new Array[Char](in.length.asInstanceOf[Int])
-      os.read(data, 0, in.length.asInstanceOf[Int])
-      data.foldLeft("")(_ + _)
-    }
-
-    def mockServe(req: Request[IO])(route: Request[IO] => IO[Response[IO]]) =
-      route(req.withBodyStream(chunk(Chunk.bytes(binData))))
-
-    "Write a text file from a byte string" in {
-      val tmpFile = File.createTempFile("foo", "bar")
-      try {
-        val response = mockServe(Request()) { req =>
-          req.decodeWith(textFile(tmpFile), strict = false) { _ =>
-            Response[IO](Ok).withEntity("Hello").pure[IO]
-          }
-        }.unsafeRunSync
-
-        readTextFile(tmpFile) must_== new String(binData)
-        response.status must_== Status.Ok
-        getBody(response.body) must returnValue("Hello".getBytes)
-      } finally {
-        tmpFile.delete()
-        ()
-      }
-    }
-
-    "Write a binary file from a byte string" in {
-      val tmpFile = File.createTempFile("foo", "bar")
-      try {
-        val response = mockServe(Request()) {
-          case req =>
-            req.decodeWith(binFile(tmpFile), strict = false) { _ =>
-              Response[IO](Ok).withEntity("Hello").pure[IO]
-            }
-        }.unsafeRunSync
-
-        response must beStatus(Status.Ok)
-        getBody(response.body) must returnValue("Hello".getBytes)
-        readFile(tmpFile) must_== binData
-      } finally {
-        tmpFile.delete()
-        ()
-      }
-    }
   }
 
   "binary EntityDecoder" should {

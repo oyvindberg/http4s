@@ -11,7 +11,7 @@ import org.http4s.internal.parboiled2.support.HNil
 import org.http4s.syntax.string._
 
 private[parser] trait Rfc3986Parser
-    extends Parser
+  extends Parser
     with Uri.Scheme.Parser
     with IpParser
     with StringBuilding {

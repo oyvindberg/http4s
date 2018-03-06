@@ -1,16 +1,14 @@
 package org.http4s
 
+import java.io._
+import java.nio.CharBuffer
+
 import cats._
 import cats.effect.Sync
 import cats.implicits._
 import fs2._
 import fs2.Stream._
-import fs2.io._
-import java.io._
-import java.nio.CharBuffer
-import java.nio.file.Path
 import org.http4s.headers._
-import org.http4s.multipart.{Multipart, MultipartEncoder}
 import scala.annotation.implicitNotFound
 
 @implicitNotFound(
@@ -113,10 +111,8 @@ trait EntityEncoderInstances0 {
     }
 }
 
-trait EntityEncoderInstances extends EntityEncoderInstances0 {
+trait EntityEncoderInstances extends EntityEncoderInstances0 with PlatformEntityEncoderInstances {
   import EntityEncoder._
-
-  private val DefaultChunkSize = 4096
 
   implicit def unitEncoder[F[_]]: EntityEncoder[F, Unit] =
     emptyEncoder[F, Unit]
@@ -147,24 +143,6 @@ trait EntityEncoderInstances extends EntityEncoderInstances0 {
   implicit def entityBodyEncoder[F[_]]: EntityEncoder[F, EntityBody[F]] =
     encodeBy(`Transfer-Encoding`(TransferCoding.chunked)) { body =>
       Entity(body, None)
-    }
-
-//  // TODO parameterize chunk size
-//  // TODO if Header moves to Entity, can add a Content-Disposition with the filename
-  implicit def fileEncoder[F[_]](implicit F: Sync[F]): EntityEncoder[F, File] =
-    filePathEncoder[F].contramap(_.toPath)
-
-  // TODO parameterize chunk size
-  // TODO if Header moves to Entity, can add a Content-Disposition with the filename
-  implicit def filePathEncoder[F[_]: Sync]: EntityEncoder[F, Path] =
-    encodeBy[F, Path](`Transfer-Encoding`(TransferCoding.chunked)) { p =>
-      Entity(file.readAll[F](p, 4096)) //2 KB :P
-    }
-
-  // TODO parameterize chunk size
-  implicit def inputStreamEncoder[F[_]: Sync, IS <: InputStream]: EntityEncoder[F, F[IS]] =
-    entityBodyEncoder[F].contramap { in: F[IS] =>
-      readInputStream[F](in.widen[InputStream], DefaultChunkSize)
     }
 
   // TODO parameterize chunk size
@@ -203,9 +181,6 @@ trait EntityEncoderInstances extends EntityEncoderInstances0 {
       // The reader is closed at the end like InputStream
       Stream.bracket(r)(_ => useReader, t => F.delay(t.close()))
     }
-
-  implicit def multipartEncoder[F[_]]: EntityEncoder[F, Multipart[F]] =
-    new MultipartEncoder[F]
 
   implicit def entityEncoderContravariant[F[_]]: Contravariant[EntityEncoder[F, ?]] =
     new Contravariant[EntityEncoder[F, ?]] {

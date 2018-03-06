@@ -4,10 +4,7 @@ import cats._
 import cats.effect.Sync
 import cats.implicits._
 import fs2._
-import fs2.io._
-import java.io.{File, FileOutputStream, PrintStream}
 import org.http4s.headers.`Content-Type`
-import org.http4s.multipart.{Multipart, MultipartDecoder}
 import scala.annotation.implicitNotFound
 
 /** A type that can be used to decode a [[Message]]
@@ -187,7 +184,7 @@ object EntityDecoder extends EntityDecoderInstances {
 }
 
 /** Implementations of the EntityDecoder instances */
-trait EntityDecoderInstances {
+trait EntityDecoderInstances extends PlatformEntityDecoderInstances {
   import org.http4s.EntityDecoder._
 
   /////////////////// Instances //////////////////////////////////////////////
@@ -217,22 +214,6 @@ trait EntityDecoderInstances {
 
   implicit def charArrayDecoder[F[_]: Sync]: EntityDecoder[F, Array[Char]] =
     text.map(_.toArray)
-
-  // File operations // TODO: rewrite these using NIO non blocking FileChannels, and do these make sense as a 'decoder'?
-  def binFile[F[_]](file: File)(implicit F: Sync[F]): EntityDecoder[F, File] =
-    EntityDecoder.decodeBy(MediaRange.`*/*`) { msg =>
-      val sink = writeOutputStream[F](F.delay(new FileOutputStream(file)))
-      DecodeResult.success(msg.body.to(sink).compile.drain).map(_ => file)
-    }
-
-  def textFile[F[_]](file: File)(implicit F: Sync[F]): EntityDecoder[F, File] =
-    EntityDecoder.decodeBy(MediaRange.`text/*`) { msg =>
-      val sink = writeOutputStream[F](F.delay(new PrintStream(new FileOutputStream(file))))
-      DecodeResult.success(msg.body.to(sink).compile.drain).map(_ => file)
-    }
-
-  implicit def multipart[F[_]: Sync]: EntityDecoder[F, Multipart[F]] =
-    MultipartDecoder.decoder
 
   /** An entity decoder that ignores the content and returns unit. */
   implicit def void[F[_]: Sync]: EntityDecoder[F, Unit] =

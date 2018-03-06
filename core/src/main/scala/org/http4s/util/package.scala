@@ -7,7 +7,7 @@ import java.nio.{ByteBuffer, CharBuffer}
 
 import scala.concurrent.ExecutionContextExecutor
 
-package object util {
+package object util extends PlatformUtil {
   def decode[F[_]](charset: Charset): Pipe[F, Byte, String] = {
     val decoder = charset.nioCharset.newDecoder
     val maxCharsPerByte = math.ceil(decoder.maxCharsPerByte().toDouble).toInt
@@ -98,14 +98,6 @@ package object util {
     "Moved to org.http4s.execution.trampoline, is now merely a ExecutionContextExecutor.",
     "0.18.0-M2")
   val TrampolineExecutionContext: ExecutionContextExecutor = execution.trampoline
-
-  @deprecated("Use fs2.StreamApp instead", "0.18.0-M7")
-  type StreamApp[F[_]] = fs2.StreamApp[F]
-
-  @deprecated("Use fs2.StreamApp.ExitCode instead", "0.18.0-M7")
-  type ExitCode = fs2.StreamApp.ExitCode
-  @deprecated("Use fs2.StreamApp.ExitCode instead", "0.18.0-M7")
-  val ExitCode = fs2.StreamApp.ExitCode
 
   /* This is nearly identical to the hashCode of java.lang.String, but converting
    * to lower case on the fly to avoid copying `value`'s character storage.

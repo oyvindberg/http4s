@@ -10,7 +10,7 @@ import java.nio.file._
 import java.nio.file._
 
 /** A low-level multipart-parsing pipe.  Most end users will prefer EntityDecoder[Multipart]. */
-object MultipartParser {
+object MultipartParser  {
 
   private[this] val logger = org.log4s.getLogger
 

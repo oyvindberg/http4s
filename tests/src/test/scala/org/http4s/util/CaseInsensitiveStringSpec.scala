@@ -3,7 +3,6 @@ package org.http4s.util
 import cats.Show
 import cats.implicits._
 import cats.kernel.laws.discipline.{MonoidTests, OrderTests}
-import java.util.Locale
 import org.http4s.Http4sSpec
 import org.scalacheck.{Arbitrary, Gen, Prop}
 
@@ -11,7 +10,7 @@ class CaseInsensitiveStringSpec extends Http4sSpec {
   "equals" should {
     "be consistent with equalsIgnoreCase of the values" in {
       prop { s: String =>
-        val lc = s.toLowerCase(Locale.ROOT)
+        val lc = s.toLowerCase
         s.equalsIgnoreCase(lc) == (s.ci == lc.ci)
       }
     }
@@ -28,7 +27,7 @@ class CaseInsensitiveStringSpec extends Http4sSpec {
   "hashCode" should {
     "be consistent with equality" in {
       prop { s: String =>
-        val lc = s.toUpperCase(Locale.ROOT)
+        val lc = s.toUpperCase
         (s.ci == lc.ci) ==> (s.ci.## == lc.ci.##)
       }
     }

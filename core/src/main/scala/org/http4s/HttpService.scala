@@ -1,7 +1,7 @@
 package org.http4s
 
-import cats._
-import cats.data._
+import cats.data.{Kleisli, OptionT}
+import cats.{Applicative, Functor}
 
 @deprecated("Replaced by HttpRoutes", "0.19")
 object HttpService extends Serializable {

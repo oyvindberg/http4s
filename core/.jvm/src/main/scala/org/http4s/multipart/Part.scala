@@ -40,10 +40,10 @@ object Part {
     fileData(name, resource.getPath.split("/").last, resource.openStream(), headers: _*)
 
   def fileData[F[_]: Sync](
-      name: String,
-      filename: String,
-      entityBody: EntityBody[F],
-      headers: Header*): Part[F] =
+                            name: String,
+                            filename: String,
+                            entityBody: EntityBody[F],
+                            headers: Header*): Part[F] =
     Part(
       `Content-Disposition`("form-data", Map("name" -> name, "filename" -> filename)) +:
         Header("Content-Transfer-Encoding", "binary") +:
@@ -55,6 +55,6 @@ object Part {
   // this API publicly would invite unsafe use, and the `EntityBody` version
   // should be safe.
   private def fileData[F[_]](name: String, filename: String, in: => InputStream, headers: Header*)(
-      implicit F: Sync[F]): Part[F] =
+    implicit F: Sync[F]): Part[F] =
     fileData(name, filename, readInputStream(F.delay(in), ChunkSize), headers: _*)
 }

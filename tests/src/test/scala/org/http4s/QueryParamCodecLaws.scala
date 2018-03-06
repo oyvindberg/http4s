@@ -11,13 +11,14 @@ import org.scalacheck.Prop._
   */
 object QueryParamCodecLaws {
 
-  def apply[T: Arbitrary: Eq: QueryParamDecoder: QueryParamEncoder] =
-    new Properties("QueryParamCodec") {
+  def apply[T: Arbitrary: Eq: QueryParamDecoder: QueryParamEncoder]: Properties = {
+    val ret = new Properties("QueryParamCodec")
 
-      property("decode . encode == successNel") = forAll { value: T =>
-        (QueryParamDecoder[T].decode _)
-          .compose(QueryParamEncoder[T].encode)(value) === value.validNel
-      }
-
+    ret.property("decode . encode == successNel") = forAll { value: T =>
+      (QueryParamDecoder[T].decode _)
+        .compose(QueryParamEncoder[T].encode)(value) === value.validNel
     }
+
+    ret
+  }
 }

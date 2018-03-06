@@ -21,7 +21,7 @@ package org.http4s
 import cats.{Order, Show}
 import cats.data.NonEmptyList
 import org.http4s.util._
-import org.http4s.parser.{Http4sParser, Rfc2616BasicRules}
+import org.http4s.parser.{Http4sParser, IpParser, Rfc2616BasicRules}
 import org.http4s.internal.parboiled2.{Parser => PbParser}
 
 class TransferCoding private (val coding: String) extends Ordered[TransferCoding] with Renderable {
@@ -77,7 +77,7 @@ object TransferCoding {
       }
     }.parse
 
-  private trait TransferCodingParser { self: PbParser =>
+  private trait TransferCodingParser extends IpParser { self: PbParser =>
     def codingRule = rule {
       "chunked" ~ push(chunked) |
         "compress" ~ push(compress) |
