@@ -161,11 +161,18 @@ lazy val asyncHttpClient = libraryProject("async-http-client")
   )
 
 lazy val fetchHttpClient =
-  http4sJsProject("fetch-client").settings(
-    libraryDependencies ++= Seq(
-      "org.scala-js" %%% "scalajs-dom" % "0.9.4"
-    )
-  ).dependsOn(
+  http4sJsProject("fetch-client")
+    .settings(
+      scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
+      libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.5",
+      scalacOptions ~= {
+        // We define a scala.js wrapper for `Fetch`. Such wrappers have dead code,
+        // so it's impossible to make it compile with this flag
+        _.filterNot(_ == "-Ywarn-dead-code")
+        .filterNot(_.contains("unused"))
+      },
+
+    ).dependsOn(
     coreJS,
     testingJS % "test->test",
     clientJS % "compile;test->test"
