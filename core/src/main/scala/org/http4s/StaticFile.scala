@@ -3,7 +3,13 @@ package org.http4s
 import cats.Semigroup
 import cats.data.OptionT
 import cats.effect.{Blocker, ContextShift, IO, Sync}
-import cats.implicits._
+import cats.instances.list._
+import cats.instances.option._
+import cats.syntax.contravariantSemigroupal._
+import cats.syntax.either._
+import cats.syntax.flatMap._
+import cats.syntax.foldable._
+import cats.syntax.functor._
 import fs2.Stream
 import fs2.io._
 import fs2.io.file.readRange

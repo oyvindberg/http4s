@@ -4,7 +4,8 @@ import java.util.concurrent.{CancellationException, CompletableFuture, Completio
 import java.util.function.BiFunction
 
 import cats.effect.{Async, Concurrent, ConcurrentEffect, Effect, IO}
-import cats.implicits._
+import cats.syntax.apply._
+import cats.syntax.flatMap._
 import org.http4s.util.execution.direct
 import org.log4s.Logger
 

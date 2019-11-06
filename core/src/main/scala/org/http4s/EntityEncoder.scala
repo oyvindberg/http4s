@@ -2,7 +2,7 @@ package org.http4s
 
 import cats.{Contravariant, Show}
 import cats.effect.{Blocker, ContextShift, Effect, Sync}
-import cats.implicits._
+import cats.syntax.functor._
 import fs2.{Chunk, Stream}
 import fs2.io.file.readAll
 import fs2.io.readInputStream

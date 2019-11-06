@@ -1,7 +1,10 @@
 package org.http4s
 
 import cats.data.{Writer => _}
-import cats.implicits._
+import cats.instances.int._
+import cats.instances.tuple._
+import cats.syntax.either._
+import cats.syntax.order._
 import cats.{Order, Show}
 import org.http4s.internal.parboiled2._
 import org.http4s.parser._

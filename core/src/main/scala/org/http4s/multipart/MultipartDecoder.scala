@@ -2,7 +2,8 @@ package org.http4s
 package multipart
 
 import cats.effect.{Blocker, ContextShift, Sync}
-import cats.implicits._
+import cats.syntax.applicativeError._
+import cats.syntax.functor._
 
 private[http4s] object MultipartDecoder {
 

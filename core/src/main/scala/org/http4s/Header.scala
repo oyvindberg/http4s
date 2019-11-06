@@ -20,7 +20,8 @@ package org.http4s
 
 import cats.{Eq, Show}
 import cats.data.NonEmptyList
-import cats.implicits._
+import cats.instances.string._
+import cats.syntax.partialOrder._
 import org.http4s.syntax.string._
 import org.http4s.util._
 import scala.util.hashing.MurmurHash3

@@ -1,7 +1,9 @@
 package org.http4s
 
 import cats.{Eq, Hash, Order, Show}
-import cats.implicits._
+import cats.instances.order._
+import cats.instances.string._
+import cats.syntax.either._
 import java.net.{Inet4Address, Inet6Address, InetAddress}
 import java.nio.ByteBuffer
 import java.nio.charset.{Charset => NioCharset, StandardCharsets}

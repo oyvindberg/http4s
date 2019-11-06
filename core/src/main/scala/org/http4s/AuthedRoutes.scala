@@ -2,7 +2,8 @@ package org.http4s
 
 import cats.Applicative
 import cats.data.{Kleisli, OptionT}
-import cats.implicits._
+import cats.instances.option._
+import cats.syntax.traverse._
 import cats.effect.Sync
 
 object AuthedRoutes {

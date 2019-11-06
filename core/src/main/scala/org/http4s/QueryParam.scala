@@ -2,7 +2,14 @@ package org.http4s
 
 import cats.{Contravariant, Functor, MonoidK, Show}
 import cats.data.{Validated, ValidatedNel}
-import cats.implicits._
+import cats.instances.boolean._
+import cats.instances.double._
+import cats.instances.float._
+import cats.instances.int._
+import cats.instances.long._
+import cats.instances.short._
+import cats.syntax.either._
+import cats.syntax.validated._
 import java.time.Instant
 import java.time.format.{DateTimeFormatter, DateTimeParseException}
 import java.time.temporal.TemporalAccessor

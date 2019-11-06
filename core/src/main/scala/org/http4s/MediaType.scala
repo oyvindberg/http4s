@@ -18,7 +18,14 @@
  */
 package org.http4s
 
-import cats.implicits._
+import cats.instances.char._
+import cats.instances.map._
+import cats.instances.order._
+import cats.instances.string._
+import cats.instances.tuple._
+import cats.instances.vector._
+import cats.syntax.either._
+import cats.syntax.partialOrder._
 import cats.{Eq, Order, Show}
 import org.http4s.headers.MediaRangeAndQValue
 import org.http4s.internal.parboiled2.{Parser => PbParser, _}

@@ -2,7 +2,10 @@ package org.http4s
 
 import cats.{Applicative, Functor, Monad, SemigroupK}
 import cats.effect.{Blocker, ContextShift, Sync}
-import cats.implicits._
+import cats.instances.string._
+import cats.syntax.apply._
+import cats.syntax.functor._
+import cats.syntax.semigroupk._
 import fs2._
 import fs2.io.file.writeAll
 import java.io.File

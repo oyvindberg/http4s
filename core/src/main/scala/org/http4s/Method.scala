@@ -1,6 +1,6 @@
 package org.http4s
 
-import cats.implicits._
+import cats.syntax.either._
 import cats.{Eq, Show}
 import org.http4s.Method.Semantics
 import org.http4s.parser.Rfc2616BasicRules

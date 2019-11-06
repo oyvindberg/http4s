@@ -3,7 +3,12 @@ package org.http4s
 import cats.{Eq, Monoid}
 import cats.data.Chain
 import cats.effect.Sync
-import cats.implicits._
+import cats.instances.map._
+import cats.instances.string._
+import cats.syntax.either._
+import cats.syntax.functor._
+import cats.syntax.partialOrder._
+import cats.syntax.semigroup._
 import org.http4s.headers._
 import org.http4s.internal.CollectionCompat
 import org.http4s.parser._

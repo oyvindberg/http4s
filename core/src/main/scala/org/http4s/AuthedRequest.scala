@@ -2,7 +2,7 @@ package org.http4s
 
 import cats.{Functor, ~>}
 import cats.data.Kleisli
-import cats.implicits._
+import cats.syntax.functor._
 
 final case class AuthedRequest[F[_], A](authInfo: A, req: Request[F]) {
   def mapK[G[_]](fk: F ~> G): AuthedRequest[G, A] =

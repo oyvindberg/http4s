@@ -1,7 +1,7 @@
 package org.http4s
 package parser
 
-import cats.implicits._
+import cats.syntax.either._
 import java.nio.charset.Charset
 import org.http4s.{Query => Q}
 import org.http4s.internal.parboiled2._

@@ -7,6 +7,10 @@ ThisBuild / organization := "org.http4s"
 ThisBuild / scalaVersion := scala_213
 Global / cancelable := true
 
+scalacOptions in ThisBuild ++= Seq(
+  "-P:semanticdb:synthetics:on"
+)
+
 lazy val modules: List[ProjectReference] = List(
   core,
   laws,
@@ -64,6 +68,9 @@ lazy val core = libraryProject("core")
     MimeLoaderPlugin
   )
   .settings(
+	addCompilerPlugin(scalafixSemanticdb),
+scalacOptions += "-Yrangepos",
+
     description := "Core http4s library for servers and clients",
     buildInfoKeys := Seq[BuildInfoKey](
       version,

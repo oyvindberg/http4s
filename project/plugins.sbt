@@ -24,3 +24,5 @@ addSbtPlugin("org.scalastyle"             %% "scalastyle-sbt-plugin"     % "1.0.
 addSbtPlugin("org.tpolecat"               %  "tut-plugin"                % "0.6.13")
 addSbtPlugin("org.xerial.sbt"             %  "sbt-sonatype"              % "3.7")
 addSbtPlugin("pl.project13.scala"         %  "sbt-jmh"                   % "0.3.7")
+
+addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.9.6+4-46eba6fe+20190911-2034-SNAPSHOT")

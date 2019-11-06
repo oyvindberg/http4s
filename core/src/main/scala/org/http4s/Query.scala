@@ -1,7 +1,7 @@
 package org.http4s
 
 import cats.{Eval, Foldable}
-import cats.implicits._
+import cats.instances.vector._
 import org.http4s.Query._
 import org.http4s.internal.CollectionCompat
 import org.http4s.internal.parboiled2.CharPredicate

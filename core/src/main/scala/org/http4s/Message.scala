@@ -2,7 +2,10 @@ package org.http4s
 
 import cats.{Applicative, Functor, Monad, MonadError, ~>}
 import cats.data.NonEmptyList
-import cats.implicits._
+import cats.syntax.applicative._
+import cats.syntax.bifunctor._
+import cats.syntax.flatMap._
+import cats.syntax.foldable._
 import cats.effect.IO
 import fs2.{Pure, Stream}
 import fs2.text.{utf8Decode, utf8Encode}

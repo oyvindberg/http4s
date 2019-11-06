@@ -19,7 +19,10 @@
 package org.http4s
 
 import cats.{Order, Show}
-import cats.implicits._
+import cats.instances.string._
+import cats.instances.tuple._
+import cats.syntax.either._
+import cats.syntax.partialOrder._
 import org.http4s.QValue.QValueParser
 import org.http4s.internal.parboiled2.{Parser => PbParser, _}
 import org.http4s.parser.Http4sParser

@@ -1,7 +1,9 @@
 package org.http4s
 
 import cats.{Applicative, Eq, MonadError}
-import cats.implicits._
+import cats.instances.either._
+import cats.syntax.applicative._
+import cats.syntax.show._
 import scala.util.control.{NoStackTrace, NonFatal}
 
 /** Indicates a failure to handle an HTTP [[Message]]. */

@@ -3,7 +3,7 @@ package org.http4s
 import cats.{Applicative, Monoid, Semigroup}
 import cats.data.Kleisli
 import cats.effect.Sync
-import cats.implicits._
+import cats.syntax.semigroup._
 
 @deprecated("Deprecated in favor of Kleisli", "0.18")
 object Service {

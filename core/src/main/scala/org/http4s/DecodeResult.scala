@@ -2,7 +2,7 @@ package org.http4s
 
 import cats.{Applicative, Functor}
 import cats.data.EitherT
-import cats.implicits._
+import cats.syntax.functor._
 
 object DecodeResult {
   def apply[F[_], A](fa: F[Either[DecodeFailure, A]]): DecodeResult[F, A] =

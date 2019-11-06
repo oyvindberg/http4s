@@ -2,7 +2,8 @@ package org.http4s
 
 import cats._
 import cats.data.{Kleisli, OptionT}
-import cats.implicits._
+import cats.instances.option._
+import cats.syntax.traverse._
 
 /** Functions for creating [[HttpRoutes]] kleislis. */
 object HttpRoutes {
